@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!--<script src='./index.js'></script>-->
+</head>
+
+<body>
+
+    <div>
+        <input type="text" id="address" placeholder="address" value="ws://0.0.0.0:9000">
+        <input type="text" id="command" placeholder="command">
+        <button onclick="createSocket()">Create Socket</button>
+        <!--<button onclick="deleteSocket()">Delete Socket</button>-->
+        <!--<input type="text" id="requestData">-->
+        <!--<button onclick=" request()">Request Data</button>-->
+        <div id="demo"></div>
+    </div>
+    <script type="text/javascript">
+        function request() {
+            //let command = { "message": "config_get" };
+            //let commandString = JSON.stringify(command);
+            //document.getElementById("requestData").innerHTML = event.data;
+            //ws.send(commandString);
+            ws.send("Message to send");
+        }
+
+        function createSocket() {
+            let i = 0;
+            let address = document.getElementById('address').value;
+            let ws = new WebSocket(address);// ws://localhost:3000
+
+            //document.getElementById("demo").innerHTML = "Create Socket";
+
+            ws.onopen = () => {
+                console.log('createSocket');
+                let command = document.getElementById('command').value;
+                let commandString = JSON.stringify(command);
+                ws.send(commandString);
+
+                ws.onmessage = event => {
+                    i++;
+                    console.log(JSON.stringify(event) + i)
+                    document.getElementById("demo").innerHTML = JSON.stringify(event) + " count: " + i;
+                }
+
+            }
+
+        }
+        function deleteSocket() {
+            ws.onclose = () => {
+                console.log('close connection');
+            }
+        }
+
+    </script>
+</body>
+
+</html>
