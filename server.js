@@ -7,11 +7,13 @@ const server = express().listen(process.env.PORT, () => console.log(`URL ws://lo
 const wss = new WebSocketServer({ server });
 
 wss.on('connection', function connection(ws) {
+    console.log('New Connected');
     ws.on('message', function incoming(message) {
         let received = JSON.parse(message)
-        console.log(`Client: ${received.message}`);
-        if (received.message == 'config_get')
-            ws.send('you request config_get');
+        console.log(received);
+        for (let i = 1; 1 < 3; i++)
+            ws.send('you request ' + received);
+
     });
 
     ws.on('close', function close() {
