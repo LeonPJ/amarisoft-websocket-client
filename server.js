@@ -7,17 +7,15 @@ const server = express().listen(process.env.PORT, () => console.log(`URL ws://lo
 const wss = new WebSocketServer({ server });
 
 wss.on('connection', function connection(ws) {
-    console.log('New Connected');
+    console.log('Client Connect');
     ws.on('message', function incoming(message) {
         let received = JSON.parse(message)
-        console.log(received);
-        for (let i = 1; 1 < 3; i++)
-            ws.send('you request ' + received);
 
+        ws.send('you request ' + JSON.stringify(received));
+        console.log(received);
     });
 
     ws.on('close', function close() {
-        console.log('disconnected');
+        console.log('Client Disconnect');
     });
-    //ws.send('something');
 });
