@@ -14,25 +14,25 @@ function sendMsg() {
 }
 
 function disconnectSocket() {
-    ws.close();
+    ws.close();// close websocket
     document.getElementById('connectStatus').innerHTML = 'Disconnect';
     document.getElementById('receivedMsg').innerHTML = '';
 }
 
 function connectSocket() {
-    ws = new WebSocket(document.getElementById('address').value);
+    ws = new WebSocket(document.getElementById('address').value);// create websocket
     ws.onopen = () => {
-        console.log('WebSocket OPEN');
+        console.log('WebSocket OPEN');// when connect
         document.getElementById('connectStatus').innerHTML = 'Connect';
     };
-    ws.onclose = () => {
+    ws.onclose = () => {// when disconnect
         console.log('WebSocket CLOSE');
     };
-    ws.onerror = err => {
+    ws.onerror = err => {// when error
         console.log('WebSocket ERROR');
         console.log(err);
     };
-    ws.onmessage = receivedMsg => {
+    ws.onmessage = receivedMsg => {// when receive massage
         console.log(receivedMsg.data);
         document.getElementById('receivedMsg').innerHTML = receivedMsg.data;
     };
