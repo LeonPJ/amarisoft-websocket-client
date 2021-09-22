@@ -3,61 +3,67 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <!--<script src='./index.js'></script>-->
+
+    <!--<script src='index.js'></script>-->
+    <script>
+        let ws = null;
+        let Protocal = null;
+        let Host = null;
+        let Port = null;
+
+        function sendMsg() {
+            //let sendCommand = document.getElementById('command').value;
+            if (document.getElementById('command').value == '')
+                ws.send('{"message": "non_ip_data"}');
+            else
+                ws.send(document.getElementById('command').value);
+
+            // {"message": "non_ip_data"}
+        }
+
+        function disconnectSocket() {
+            ws.close();
+            document.getElementById('connectStatus').innerHTML = 'Disconnect';
+            document.getElementById('receivedMsg').innerHTML = '';
+        }
+
+        function connectSocket() {
+            ws = new WebSocket(document.getElementById('address').value);
+            ws.onopen = () => {
+                console.log('WebSocket OPEN');
+                document.getElementById('connectStatus').innerHTML = 'Connect';
+            };
+            ws.onclose = () => {
+                console.log('WebSocket CLOSE');
+            };
+            ws.onerror = err => {
+                console.log('WebSocket ERROR');
+                console.log(err);
+            };
+            ws.onmessage = receivedMsg => {
+                console.log(receivedMsg.data);
+                document.getElementById('receivedMsg').innerHTML = receivedMsg.data;
+            };
+
+        }
+    </script>
 </head>
 
 <body>
-
     <div>
-        <input type="text" id="address" placeholder="address" value="ws://0.0.0.0:9000">
-        <input type="text" id="command" placeholder="command">
-        <button onclick="createSocket()">Create Socket</button>
-        <!--<button onclick="deleteSocket()">Delete Socket</button>-->
-        <!--<input type="text" id="requestData">-->
-        <!--<button onclick=" request()">Request Data</button>-->
-        <div id="demo"></div>
+        <input type="text" id="address" placeholder="ws://0.0.0.0:9000" value="ws://localhost:3000">
+        <!--ws://localhost:3000-->
+        <button onclick="connectSocket()">Connect Socket</button>
+        <button onclick="disconnectSocket()">Disconnect Socket</button>
     </div>
-    <script type="text/javascript">
-        function request() {
-            //let command = { "message": "config_get" };
-            //let commandString = JSON.stringify(command);
-            //document.getElementById("requestData").innerHTML = event.data;
-            //ws.send(commandString);
-            ws.send("Message to send");
-        }
-
-        function createSocket() {
-            let i = 0;
-            let address = document.getElementById('address').value;
-            let ws = new WebSocket(address);// ws://localhost:3000
-
-            //document.getElementById("demo").innerHTML = "Create Socket";
-
-            ws.onopen = () => {
-                console.log('createSocket');
-                let command = document.getElementById('command').value;
-                let commandString = JSON.stringify(command);
-                ws.send(commandString);
-
-                ws.onmessage = event => {
-                    i++;
-                    console.log(JSON.stringify(event) + i)
-                    document.getElementById("demo").innerHTML = JSON.stringify(event) + " count: " + i;
-                }
-
-            }
-
-        }
-        function deleteSocket() {
-            ws.onclose = () => {
-                console.log('close connection');
-            }
-        }
-
-    </script>
+    <div>
+        <input type="text" id="command" placeholder="Command">
+        <button onclick="sendMsg()">Send Message</button>
+    </div>
+    <div id="connectStatus"></div>
+    <div id="receivedMsg"></div>
 </body>
 
 </html>
