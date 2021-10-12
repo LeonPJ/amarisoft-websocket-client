@@ -15,6 +15,24 @@
         let Host = null;
         let Port = null;
 
+        function hex_to_ascii(str1) {
+            var hex = str1.toString();
+            var str = '';
+            for (var n = 0; n < hex.length; n += 2) {
+                str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+            }
+            console.log(str);
+            document.getElementById('jsonData').innerHTML = str;
+
+            let date = new Date();
+            let timestamp = date.getFullYear() + '/' + date.getMonth() + '/' + (1 + date.getDate()) + "-" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
+
+            const JSONlog = document.createElement("p");
+            JSONlog.innerHTML = 'Timestamp:' + timestamp + "     " + str;
+            document.body.appendChild(JSONlog);
+            //return str;
+        }
+
         function sendRegister() {
             ws.send('{"message": "register", "register":"non_ip_data"}');
         }
@@ -51,11 +69,12 @@
             };
             ws.onmessage = receivedMsg => {// when receive massage
                 //console.log(receivedMsg.data);
-                //console.log(receivedMsg.data);
                 let receiveMsgObj = JSON.parse(receivedMsg.data);// string to object
                 //console.log(receiveMsgObj.message);
                 console.log(typeof (receiveMsgObj));
                 document.getElementById('receivedMsg').innerHTML = JSON.stringify(receiveMsgObj);
+                if (receiveMsgObj.data)
+                    hex_to_ascii(receiveMsgObj.data);
             };
 
         }
@@ -74,6 +93,7 @@
     </div>
     <div id="connectStatus"></div>
     <div id="receivedMsg"></div>
+    <div id="jsonData"></div>
 </body>
 
 </html>
