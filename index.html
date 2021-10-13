@@ -29,7 +29,7 @@
 
             const JSONlog = document.createElement("p");
             JSONlog.innerHTML = 'Timestamp:' + timestamp + "     " + str;
-            document.body.appendChild(JSONlog);
+            document.getElementById('recvLog').appendChild(JSONlog);
             //return str;
         }
 
@@ -52,6 +52,11 @@
             ws.close();// close websocket
             document.getElementById('connectStatus').innerHTML = 'Disconnect';
             document.getElementById('receivedMsg').innerHTML = '';
+            document.getElementById('jsonData').innerHTML = '';
+            document.getElementById('recvLog').innerHTML = '';
+            //var cleanRecvLog = document.getElementById('recvLog').lastChild;
+            //document.getElementById('recvLog').removeChild(cleanRecvLog);
+            //document.getElementsByTagName.removeChild(JSONlog);//test
         }
 
         function connectSocket() {
@@ -71,7 +76,7 @@
                 //console.log(receivedMsg.data);
                 let receiveMsgObj = JSON.parse(receivedMsg.data);// string to object
                 //console.log(receiveMsgObj.message);
-                console.log(typeof (receiveMsgObj));
+                //console.log(typeof (receiveMsgObj));
                 document.getElementById('receivedMsg').innerHTML = JSON.stringify(receiveMsgObj);
                 if (receiveMsgObj.data)
                     hex_to_ascii(receiveMsgObj.data);
@@ -94,6 +99,7 @@
     <div id="connectStatus"></div>
     <div id="receivedMsg"></div>
     <div id="jsonData"></div>
+    <div id="recvLog"></div>
 </body>
 
 </html>
