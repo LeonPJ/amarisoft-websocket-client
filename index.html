@@ -15,29 +15,47 @@
         let Host = null;
         let Port = null;
 
-        function hex_to_ascii(str1) {
-            var hex = str1.toString();
-            var str = '';
-            for (var n = 0; n < hex.length; n += 2) {
+        function download(filename, text) {// create .txt log
+            let element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function logDownload() {// require log on the brower
+            //console.log(document.getElementById('recvLog').textContent);
+            download(timeStamp() + " JSON LOG.txt", document.getElementById('recvLog').textContent);
+        }
+
+        function timeStamp() {
+            let date = new Date();
+            let timestamp = date.getFullYear() + '-' + date.getMonth() + '-' + (1 + date.getDate()) + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+            return timestamp;
+        }
+
+        function hex_to_ascii(str1) {// analyze hex data
+            let hex = str1.toString();
+            let str = '';
+            for (let n = 0; n < hex.length; n += 2) {
                 str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
             }
             console.log(str);
             document.getElementById('jsonData').innerHTML = str;
-
-            let date = new Date();
-            let timestamp = date.getFullYear() + '/' + date.getMonth() + '/' + (1 + date.getDate()) + "-" + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
-
-            const JSONlog = document.createElement("p");
-            JSONlog.innerHTML = 'Timestamp:' + timestamp + "     " + str;
+            let time = timeStamp();
+            const JSONlog = document.createElement('p');
+            JSONlog.innerHTML = 'Timestamp:' + time + '     ' + str + '\n';
             document.getElementById('recvLog').appendChild(JSONlog);
             //return str;
         }
 
-        function sendRegister() {
+        function sendRegister() {// base station regist non ip
             ws.send('{"message": "register", "register":"non_ip_data"}');
         }
 
-        function getConfig() {
+        function getConfig() {// get base station current setting
             ws.send('{"message": "config_get"}');
         }
 
@@ -54,25 +72,50 @@
             document.getElementById('receivedMsg').innerHTML = '';
             document.getElementById('jsonData').innerHTML = '';
             document.getElementById('recvLog').innerHTML = '';
-            //var cleanRecvLog = document.getElementById('recvLog').lastChild;
-            //document.getElementById('recvLog').removeChild(cleanRecvLog);
-            //document.getElementsByTagName.removeChild(JSONlog);//test
+            /*restrict btn*/
+            const disconnectBtn = document.getElementById('disconnectSocket');
+            disconnectBtn.disabled = true;
+            const connectBtn = document.getElementById('connectSocket');
+            connectBtn.disabled = false;
+            const sendMsgBtn = document.getElementById('sendMsg');
+            sendMsgBtn.disabled = true;
+            const getConfigBtn = document.getElementById('getConfig');
+            getConfigBtn.disabled = true;
+            const sendRegisterBtn = document.getElementById('sendRegister');
+            sendRegisterBtn.disabled = true;
+            const logDownloadBtn = document.getElementById('logDownload');
+            logDownloadBtn.disabled = true;
         }
 
         function connectSocket() {
+
             ws = new WebSocket(document.getElementById('address').value);// create websocket
             ws.onopen = () => {
                 console.log('WebSocket OPEN');// when connect
                 document.getElementById('connectStatus').innerHTML = 'Connect';
+                /*restrict btn*/
+                const disconnectBtn = document.getElementById('disconnectSocket');
+                disconnectBtn.disabled = false;
+                const connectBtn = document.getElementById('connectSocket');
+                connectBtn.disabled = true;
+                const sendMsgBtn = document.getElementById('sendMsg');
+                sendMsgBtn.disabled = false;
+                const getConfigBtn = document.getElementById('getConfig');
+                getConfigBtn.disabled = false;
+                const sendRegisterBtn = document.getElementById('sendRegister');
+                sendRegisterBtn.disabled = false;
+                const logDownloadBtn = document.getElementById('logDownload');
+                logDownloadBtn.disabled = false;
             };
-            ws.onclose = () => {// when disconnect
+
+            ws.onclose = () => {
                 console.log('WebSocket CLOSE');
             };
-            ws.onerror = err => {// when error
+            ws.onerror = err => {
                 console.log('WebSocket ERROR');
                 console.log(err);
             };
-            ws.onmessage = receivedMsg => {// when receive massage
+            ws.onmessage = receivedMsg => {// receive massage
                 //console.log(receivedMsg.data);
                 let receiveMsgObj = JSON.parse(receivedMsg.data);// string to object
                 //console.log(receiveMsgObj.message);
@@ -87,14 +130,15 @@
     <div>
         <input type="text" id="address" placeholder="ws://localhost:3000" value="ws://192.168.5.146:9000">
         <!--ws://localhost:3000-->
-        <button onclick="connectSocket()">Connect Socket</button>
-        <button onclick="disconnectSocket()">Disconnect Socket</button>
+        <button id="connectSocket" onclick="connectSocket()">Connect Socket</button>
+        <button id="disconnectSocket" onclick="disconnectSocket()" disabled>Disconnect Socket</button>
     </div>
     <div>
         <input type="text" id="command" placeholder="Command">
-        <button onclick="sendMsg()">Send Message</button>
-        <button onclick="getConfig()">Get Config</button>
-        <button onclick="sendRegister()">Send Register</button>
+        <button id="sendMsg" onclick="sendMsg()" disabled>Send Message</button>
+        <button id="getConfig" onclick="getConfig()" disabled>Get Config</button>
+        <button id="sendRegister" onclick="sendRegister()" disabled>Send Register</button>
+        <button id="logDownload" onclick="logDownload()" disabled>Log Download</button>
     </div>
     <div id="connectStatus"></div>
     <div id="receivedMsg"></div>
