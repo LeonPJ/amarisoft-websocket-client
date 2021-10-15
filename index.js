@@ -2,39 +2,47 @@ let ws = null;
 let Protocal = null;
 let Host = null;
 let Port = null;
+let timestampBool = false;
 
-function download(filename, text) {// create .txt log
+function clean() {
+    document.getElementById('recvLog').innerHTML = '';
+}
+
+function timestamp() {
+    timestampBool = !timestampBool;
+    document.getElementById('time').innerHTML = 'timestamp: ' + timestampBool;
+}
+
+function download() {// download log
+    let logContent = document.getElementById('recvLog').textContent;
     let element = document.createElement('a');
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-    element.setAttribute('download', filename);
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(logContent));
+    element.setAttribute('download', time() + " JSON LOG.txt");
     element.style.display = 'none';
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
 }
 
-function logDownload() {// require log on the brower
-    //console.log(document.getElementById('recvLog').textContent);
-    download(timeStamp() + " JSON LOG.txt", document.getElementById('recvLog').textContent);
-}
-
-function timeStamp() {
+function time() {// current time
     let date = new Date();
     let timestamp = date.getFullYear() + '-' + date.getMonth() + '-' + (1 + date.getDate()) + ' ' + date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
     return timestamp;
 }
 
-function hex_to_ascii(str1) {// analyze hex data
+function hex_to_ascii(str1) {// convert hex data
     let hex = str1.toString();
     let str = '';
     for (let n = 0; n < hex.length; n += 2) {
         str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
     }
     console.log(str);
-    document.getElementById('jsonData').innerHTML = str;
-    let time = timeStamp();
+    //document.getElementById('jsonData').innerHTML = str;
     const JSONlog = document.createElement('p');
-    JSONlog.innerHTML = 'Timestamp:' + time + '     ' + str + '\n';
+    if (timestampBool)
+        JSONlog.innerHTML = 'Timestamp:' + time() + '     ' + str + '\n';
+    else
+        JSONlog.innerHTML = str + '\n';
     document.getElementById('recvLog').appendChild(JSONlog);
     //return str;
 }
@@ -58,42 +66,35 @@ function disconnectSocket() {
     ws.close();// close websocket
     document.getElementById('connectStatus').innerHTML = 'Disconnect';
     document.getElementById('receivedMsg').innerHTML = '';
-    document.getElementById('jsonData').innerHTML = '';
+    //document.getElementById('jsonData').innerHTML = '';
+    document.getElementById('time').innerHTML = '';
     document.getElementById('recvLog').innerHTML = '';
     /*restrict btn*/
-    const disconnectBtn = document.getElementById('disconnectSocket');
-    disconnectBtn.disabled = true;
-    const connectBtn = document.getElementById('connectSocket');
-    connectBtn.disabled = false;
-    const sendMsgBtn = document.getElementById('sendMsg');
-    sendMsgBtn.disabled = true;
-    const getConfigBtn = document.getElementById('getConfig');
-    getConfigBtn.disabled = true;
-    const sendRegisterBtn = document.getElementById('sendRegister');
-    sendRegisterBtn.disabled = true;
-    const logDownloadBtn = document.getElementById('logDownload');
-    logDownloadBtn.disabled = true;
+    document.getElementById('disconnectSocket').disabled = true;
+    document.getElementById('connectSocket').disabled = false;
+    document.getElementById('sendMsg').disabled = true;
+    document.getElementById('getConfig').disabled = true;
+    document.getElementById('sendRegister').disabled = true;
+    document.getElementById('timestamp').disabled = true;
+    document.getElementById('download').disabled = true;
+    document.getElementById('clearLog').disabled = true;
 }
 
 function connectSocket() {
-
     ws = new WebSocket(document.getElementById('address').value);// create websocket
     ws.onopen = () => {
-        console.log('WebSocket OPEN');// when connect
+        console.log('WebSocket OPEN');
         document.getElementById('connectStatus').innerHTML = 'Connect';
+        document.getElementById('time').innerHTML = 'timestamp: ' + timestampBool;
         /*restrict btn*/
-        const disconnectBtn = document.getElementById('disconnectSocket');
-        disconnectBtn.disabled = false;
-        const connectBtn = document.getElementById('connectSocket');
-        connectBtn.disabled = true;
-        const sendMsgBtn = document.getElementById('sendMsg');
-        sendMsgBtn.disabled = false;
-        const getConfigBtn = document.getElementById('getConfig');
-        getConfigBtn.disabled = false;
-        const sendRegisterBtn = document.getElementById('sendRegister');
-        sendRegisterBtn.disabled = false;
-        const logDownloadBtn = document.getElementById('logDownload');
-        logDownloadBtn.disabled = false;
+        document.getElementById('disconnectSocket').disabled = false;
+        document.getElementById('connectSocket').disabled = true;
+        document.getElementById('sendMsg').disabled = false;
+        document.getElementById('getConfig').disabled = false;
+        document.getElementById('sendRegister').disabled = false;
+        document.getElementById('timestamp').disabled = false;
+        document.getElementById('download').disabled = false;
+        document.getElementById('clearLog').disabled = false;
     };
 
     ws.onclose = () => {
@@ -103,7 +104,8 @@ function connectSocket() {
         console.log('WebSocket ERROR');
         console.log(err);
     };
-    ws.onmessage = receivedMsg => {// receive massage
+    /*receive massage*/
+    ws.onmessage = receivedMsg => {
         //console.log(receivedMsg.data);
         let receiveMsgObj = JSON.parse(receivedMsg.data);// string to object
         //console.log(receiveMsgObj.message);
@@ -112,5 +114,4 @@ function connectSocket() {
         if (receiveMsgObj.data)
             hex_to_ascii(receiveMsgObj.data);
     };
-
 }
