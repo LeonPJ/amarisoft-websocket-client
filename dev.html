@@ -16,9 +16,10 @@
         let Port = null;
         let timestampBool = false;
 
+        const RegistNonIP = '{"message": "register", "register":"non_ip_data"}';
+
         function clearLog() {// clear log
             document.getElementById('recvLog').innerHTML = '';
-            //document.getElementById('receivedMsg').innerHTML = '';
         }
 
         function timestamp() {// timestamp status
@@ -44,18 +45,25 @@
         }
 
         function printLog(type, recvAll, recvData, sendData) {// print receive and send message
+            let timestamp = '';
+            if (timestampBool)
+                timestamp = time() + ' ';
+
             if (type == 'receive') {
                 let log = document.createElement('p');
-                log.innerHTML = 'Receive' + '<br />' + 'All Data: ' + recvAll + '<br />' + 'Parse Data: ' + '     ' + recvData + '<br />';
+                log.innerHTML = timestamp + 'Receive' + '<br />' + 'All Data: ' + recvAll + '\n' + 'Parse Data: ' + recvData + '\n';
                 document.getElementById('recvLog').appendChild(log);
             } else if (type == 'send') {
                 let log = document.createElement('p');
-                log.innerHTML = 'Send: ' + JSON.stringify(sendData);
+                log.innerHTML = timestamp + 'Send: ' + JSON.stringify(sendData) + '\n';
+                document.getElementById('recvLog').appendChild(log);
+            } else if (type == 'command') {
+                let log = document.createElement('p');
+                log.innerHTML = timestamp + 'Send Command: ' + sendData + '\n';
                 document.getElementById('recvLog').appendChild(log);
             } else {
                 let log = document.createElement('p');
-                log.innerHTML = 'Receive Send Result: ' + JSON.stringify(recvData);
-                //console.log('recvData: ' + typeof (recvData));
+                log.innerHTML = timestamp + 'Receive Send Result: ' + JSON.stringify(recvData) + '\n';
                 document.getElementById('recvLog').appendChild(log);
             }
         }
@@ -66,25 +74,52 @@
             for (let n = 0; n < hex.length; n += 2) {
                 data += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
             }
-
             return data;
+        }
+
+        function ascii_to_hex(strData) {
+            var arr1 = [];
+            for (var n = 0, l = strData.length; n < l; n++) {
+                var hex = Number(strData.charCodeAt(n)).toString(16);
+                arr1.push(hex);
+            }
+            return arr1.join('');
         }
 
         function createAckData(parseData) {// websocket client send non ip data to base station
             let parseDataObj = JSON.parse(parseData);
+            let deviceData = document.getElementById('sendToDeviceData').value;
+            let data = ascii_to_hex(deviceData);// sting convert to hex
             /*send non-ip context*/
             let ackData = {
                 "message": parseDataObj.message,
                 "imsi": parseDataObj.imsi,
                 "imei": parseDataObj.imei,
                 "erab_id": parseDataObj.erab_id,
-                "data": "41424344454647"// data
+                "data": data
             }
             return ackData;
         }
 
         function sendRegister() {// base station regist non ip
-            ws.send('{"message": "register", "register":"non_ip_data"}');
+            let command = 'command';
+            ws.send(RegistNonIP);
+            document.getElementById('currentCommand').innerHTML = 'Current Command: ' + RegistNonIP;
+            printLog(command, 0, 0, RegistNonIP);
+        }
+
+
+        function sendCommand() {// excute another command
+            let command = 'command';
+            let newCommand = document.getElementById('command').value;
+            if (newCommand == '')
+                document.getElementById('currentCommand').innerHTML = 'ERROR: Command is Null';
+            else {
+                ws.send(document.getElementById('command').value);
+                document.getElementById('currentCommand').innerHTML = 'Current Command: ' + newCommand;
+                printLog(command, 0, 0, newCommand);
+            }
+
         }
 
         function btnRestrict(btnRestrictBool) {// restrict btn
@@ -112,11 +147,9 @@
         function disconnectSocket() {
             ws.close();
             document.getElementById('connectStatus').innerHTML = 'Disconnect';
-            document.getElementById('receivedMsg').innerHTML = '';
-            //document.getElementById('jsonData').innerHTML = '';
+            document.getElementById('currentCommand').innerHTML = '';
             document.getElementById('time').innerHTML = '';
             document.getElementById('recvLog').innerHTML = '';
-
             btnRestrict(false);//restrict btn
         }
 
@@ -141,14 +174,14 @@
                 let receive = 'receive';
                 let send = 'send';
                 let result = 'result';
-                let receiveMsgObj = JSON.parse(receivedMsg.data);// string to object
+                let receiveMsgObj = JSON.parse(receivedMsg.data);
 
                 if (receiveMsgObj.data) {
                     let allData = JSON.stringify(receiveMsgObj);
                     let convertData = hex_to_ascii(receiveMsgObj.data);// convert hex data
                     printLog(receive, allData, convertData, 0);
                     let ackData = createAckData(allData);
-                    ws.send(JSON.stringify(ackData));
+                    ws.send(JSON.stringify(ackData));// send to device data
                     printLog(send, 0, 0, ackData);
                 } else {
                     printLog(0, 0, receiveMsgObj, 0);
@@ -170,11 +203,15 @@
         <button id="timestamp" onclick="timestamp()" disabled>Timestamp</button>
         <button id="download" onclick="download()" disabled>Download</button>
         <button id="clearLog" onclick="clearLog()" disabled>Clear Log</button>
+        <button onclick="stringToHex()">TEST</button>
+    </div>
+    <div>
+        Enter send to device data
+        <input type="text" id="sendToDeviceData" placeholder="enter string" value="ABCD">
     </div>
     <div id="connectStatus"></div>
     <div id="time"></div>
-    <div id="receivedMsg"></div>
-    <!--<div id="jsonData"></div>-->
+    <div id="currentCommand"></div>
     <hr>
     <div id="recvLog"></div>
 
